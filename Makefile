@@ -13,7 +13,7 @@ RM = rm
 INSTALL = install
 SCDOC = scdoc
 
-GOBUILD_OPTS=-trimpath
+GOBUILD_OPTS=-trimpath -buildmode=pie
 
 all: build doc
 
