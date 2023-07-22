@@ -2,7 +2,6 @@
 # when working on this project.
 .env
 .tmp
-cover.out
 
 # https://i.cpimg.sh/r6BsGDijfFyl.png
 .DS_Store
