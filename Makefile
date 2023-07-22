@@ -1,11 +1,21 @@
 .POSIX:
 .SUFFIXES:
 
+PREFIX=/usr/local
+BINDIR=bin
+MANDIR=share/man
+PKGDIR=./cmd/imgdiet
+
 GO=go
 GIT=git
 RM = rm
 
-all: pre-commit
+INSTALL = install
+SCDOC = scdoc
+
+GOBUILD_OPTS=-trimpath
+
+all: build doc
 
 pre-commit: tidy fmt lint vulnerabilities test clean # Runs all pre-commit checks.
 
@@ -14,6 +24,19 @@ commit: pre-commit # Commits the changes to the repository.
 
 push: commit # Pushes the changes to the repository.
 	$(GIT) push origin trunk
+
+build: # Builds an application binary.
+	$(GO) build $(GOBUILD_OPTS) $(PKGDIR)
+
+doc: # Builds the manpage.
+	$(SCDOC) <cmd/imgdiet/doc/imgdiet.1.scd >imgdiet.1
+
+install: # Installs the release binary.
+	$(INSTALL) -d \
+		$(DESTDIR)$(PREFIX)/$(BINDIR)/ \
+		$(DESTDIR)$(PREFIX)/$(MANDIR)/man1/
+	$(INSTALL) -pm 0755 imgdiet $(DESTDIR)$(PREFIX)/$(BINDIR)/
+	$(INSTALL) -pm 0644 imgdiet.1 $(DESTDIR)$(PREFIX)/$(MANDIR)/man1/
 
 tidy: # Updates the go.mod file to use the latest versions of all direct and indirect dependencies.
 	$(GO) mod tidy
@@ -35,6 +58,6 @@ test/coverage: # Generates a coverage profile and open it in a browser.
 	$(GO) tool cover -html=cover.out
 
 clean: # Cleans cache files from tests and deletes any build output.
-	$(RM) -f cover.out
+	$(RM) -f imgdiet imgdiet.1
 
-.PHONY: all pre-commit commit push tidy fmt lint vulnerabilities test test/coverage clean
+.PHONY: all pre-commit commit push build doc install tidy fmt lint vulnerabilities test test/coverage clean
