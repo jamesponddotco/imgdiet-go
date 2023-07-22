@@ -24,13 +24,13 @@ If you wish to use the command-line tool as well, you'll also need
 
 To install `imgdiet`, run:
 
-```console
+```sh
 go get git.sr.ht/~jamesponddotco/imgdiet-go
 ```
 
 You can also install the command-line application by running:
 
-```console
+```sh
 make
 sudo make install
 ```
@@ -80,6 +80,9 @@ func main() {
 	// Do something with the byte slice of the optimized image.
 }
 ```
+
+For more examples and usage details, please [check the Go reference
+documentation](https://godocs.io/git.sr.ht/~jamesponddotco/imgdiet-go).
 
 ### As a CLI tool
 
