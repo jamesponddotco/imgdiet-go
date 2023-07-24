@@ -2,7 +2,7 @@
 
 [![Go Documentation](https://godocs.io/git.sr.ht/~jamesponddotco/imgdiet-go?status.svg)](https://godocs.io/git.sr.ht/~jamesponddotco/imgdiet-go)
 [![Go Report Card](https://goreportcard.com/badge/git.sr.ht/~jamesponddotco/imgdiet-go)](https://goreportcard.com/report/git.sr.ht/~jamesponddotco/imgdiet-go)
-[![Coverage Report](https://img.shields.io/badge/coverage-79.5%25-green)](https://git.sr.ht/~jamesponddotco/imgdiet-go/tree/trunk/item/cover.out)
+[![Coverage Report](https://img.shields.io/badge/coverage-80.5%25-green)](https://git.sr.ht/~jamesponddotco/imgdiet-go/tree/trunk/item/cover.out)
 [![builds.sr.ht status](https://builds.sr.ht/~jamesponddotco/imgdiet-go.svg)](https://builds.sr.ht/~jamesponddotco/imgdiet-go?)
 
 `imgdiet` is a Go module built for optimizing images. It leverages the
