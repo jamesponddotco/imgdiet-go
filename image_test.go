@@ -225,6 +225,15 @@ func TestImage_Resize(t *testing.T) { //nolint:gocognit // TODO: simplify
 			expectedHeight: 500,
 			wantErr:        false,
 		},
+		{
+			name:           "resize_with_bigger_width_and_height",
+			file:           filepath.Join(_TestDataPath, _TestValidImageJPG),
+			width:          2000,
+			height:         3000,
+			expectedWidth:  1545,
+			expectedHeight: 2318,
+			wantErr:        false,
+		},
 	}
 
 	for _, tt := range tests {

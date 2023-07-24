@@ -182,12 +182,24 @@ func (i *Image) Resize(width, height uint, opts *Options) ([]byte, error) {
 		return nil, fmt.Errorf("%w", ErrInvalidResizeDimensions)
 	}
 
-	aspectRatio := float64(i.reference.Width()) / float64(i.reference.Height())
+	var (
+		originalWidth  = i.reference.Width()
+		originalHeight = i.reference.Height()
+		aspectRatio    = float64(originalWidth) / float64(originalHeight)
+	)
 
 	if width == 0 {
 		width = uint(math.Round(float64(height) * aspectRatio))
 	} else if height == 0 {
 		height = uint(math.Round(float64(width) / aspectRatio))
+	}
+
+	if int(width) > originalWidth {
+		width = uint(originalWidth)
+	}
+
+	if int(height) > originalHeight {
+		height = uint(originalHeight)
 	}
 
 	if err := i.reference.Thumbnail(int(width), int(height), vips.InterestingCentre); err != nil {
