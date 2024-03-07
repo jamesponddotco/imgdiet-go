@@ -1,9 +1,9 @@
 package imgdiet
 
 import (
+	"log"
 	"time"
 
-	"git.sr.ht/~jamesponddotco/xstd-go/xlog"
 	"github.com/davidbyttow/govips/v2/vips"
 )
 
@@ -33,10 +33,10 @@ func DefaultLogger(_ string, verbosity vips.LogLevel, message string) {
 
 	level, ok := levels[verbosity]
 	if !ok {
-		xlog.Printf("Invalid log level: %v. Defaulting to 'info'", verbosity)
+		log.Printf("Invalid log level: %v. Defaulting to 'info'", verbosity)
 
 		level = "info"
 	}
 
-	xlog.Printf("[%s] %s: %s", timestamp, level, message)
+	log.Printf("[%s] %s: %s", timestamp, level, message)
 }
