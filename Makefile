@@ -6,14 +6,14 @@ BINDIR=bin
 MANDIR=share/man
 PKGDIR=./cmd/imgdiet
 
-GO=go
-GIT=git
+GO = go
+GIT = git
 RM = rm
 
 INSTALL = install
 SCDOC = scdoc
 
-GOBUILD_OPTS=-trimpath -buildmode=pie
+GOBUILD_OPTS=-trimpath -buildmode=pie -ldflags '-s -w' -mod 'readonly' -modcacherw
 
 all: build doc
 
