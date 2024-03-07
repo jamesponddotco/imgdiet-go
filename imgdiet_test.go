@@ -13,6 +13,7 @@ const (
 	_TestInvalidImageJPG  string = "invalid-image.jpg"
 	_TestValidImagePNG    string = "cipherhost-avatar.png"
 	_TestValidImageGIF    string = "whoops.gif"
+	_TestValidImageWebP   string = "webp-animated.webp"
 	_TestNonExistentImage string = "impossible-girl.jpg"
 )
 
@@ -47,6 +48,12 @@ func TestDetectImageType(t *testing.T) {
 		{
 			name: "gif",
 			give: _TestDataPath + "/" + _TestValidImageGIF,
+			want: "GIF",
+			err:  false,
+		},
+		{
+			name: "webp",
+			give: _TestDataPath + "/" + _TestValidImageWebP,
 			want: "",
 			err:  true,
 		},

@@ -17,6 +17,7 @@ import (
 const (
 	ImageTypeJPEG string = "JPEG"
 	ImageTypePNG  string = "PNG"
+	ImageTypeGIF  string = "GIF"
 )
 
 // ErrUnsupportedImageFormat is returned when the image format is not supported by this package.
@@ -52,6 +53,8 @@ func DetectImageType(image []byte) (string, error) {
 		return ImageTypeJPEG, nil
 	case "image/png":
 		return ImageTypePNG, nil
+	case "image/gif":
+		return ImageTypeGIF, nil
 	default:
 		return "", ErrUnsupportedImageFormat
 	}

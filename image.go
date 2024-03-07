@@ -27,11 +27,29 @@ type Options struct {
 	// Only valid for PNG images.
 	Compression uint
 
+	// Effort defines the level of CPU effort to be used when optimizing the
+	// output image. It is a number between 0 and 9.
+	//
+	// Only valid for GIF images.
+	Effort uint
+
 	// QuantTable defines the quantization table to be used for the output
 	// image. It is a number between 0 and 8.
 	//
 	// Only valid for JPEG images.
 	QuantTable uint
+
+	// Bitdepth defines the number of bits per pixel of the output image. It is
+	// a number between 1 and 8.
+	//
+	// Only valid for GIF images.
+	Bitdepth uint
+
+	// Dither defines the amount of dithering to be applied during 8bpp (bits
+	// per pixel) quantization. It is a floating-point number between 0 and 1.
+	//
+	// Only valid for GIF images.
+	Dither float64
 
 	// OptimizeCoding defines whether the output image should have its coding
 	// optimized.
@@ -74,7 +92,9 @@ func DefaultOptions() *Options {
 	return &Options{
 		Quality:            60,
 		Compression:        9,
+		Effort:             7,
 		QuantTable:         3,
+		Bitdepth:           8,
 		OptimizeCoding:     true,
 		Interlaced:         false,
 		StripMetadata:      true,
@@ -162,6 +182,11 @@ func (i *Image) Optimize(opts *Options) ([]byte, error) {
 		}
 	case ImageTypePNG:
 		image, err = i.optimizePNG(opts)
+		if err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+	case ImageTypeGIF:
+		image, err = i.optimizeGIF(opts)
 		if err != nil {
 			return nil, fmt.Errorf("%w", err)
 		}
@@ -273,6 +298,26 @@ func (i *Image) optimizePNG(opts *Options) ([]byte, error) {
 	}
 
 	image, _, err := i.reference.ExportPng(options)
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+
+	return image, nil
+}
+
+// optimizeGIF takes the given Options and optimizes the image accordingly. It
+// returns the optimized image as a byte slice or an error if the optimization
+// fails.
+func (i *Image) optimizeGIF(opts *Options) ([]byte, error) {
+	options := &vips.GifExportParams{
+		StripMetadata: opts.StripMetadata,
+		Quality:       int(opts.Quality),
+		Dither:        opts.Dither,
+		Effort:        int(opts.Effort),
+		Bitdepth:      int(opts.Bitdepth),
+	}
+
+	image, _, err := i.reference.ExportGIF(options)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}

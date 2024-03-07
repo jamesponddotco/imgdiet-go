@@ -54,8 +54,13 @@ func TestOpen(t *testing.T) {
 			err:  nil,
 		},
 		{
-			name: "invalid_image",
+			name: "valid_GIF_image",
 			give: _TestDataPath + "/" + _TestValidImageGIF,
+			err:  nil,
+		},
+		{
+			name: "invalid_image",
+			give: _TestDataPath + "/" + _TestValidImageWebP,
 			err:  imgdiet.ErrUnsupportedImageFormat,
 		},
 		{
@@ -124,6 +129,12 @@ func TestImage_Optimize(t *testing.T) {
 		{
 			name:    "valid_PNG_image",
 			file:    filepath.Join(_TestDataPath, _TestValidImagePNG),
+			options: imgdiet.DefaultOptions(),
+			wantErr: false,
+		},
+		{
+			name:    "valid_GIF_image",
+			file:    filepath.Join(_TestDataPath, _TestValidImageGIF),
 			options: imgdiet.DefaultOptions(),
 			wantErr: false,
 		},
