@@ -10,8 +10,9 @@ power of the [`libvips`](https://github.com/libvips/libvips) library to
 provide an easy-to-use, lightweight, and idiomatic way to reduce image
 size without significant loss of quality.
 
-> **Note**: Only PNG and JPG images are supported at the moment. Support
-> for more image formats is expected to be added soon. [Patches are
+> **Note**: Only PNG, GIF, and JPG images are supported at the moment.
+> Support for more image formats is expected to be added in the future.
+> [Patches are
 > welcome](https://lists.sr.ht/~jamesponddotco/imgdiet-devel).
 
 ## Prerequisites
