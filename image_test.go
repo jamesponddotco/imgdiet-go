@@ -170,7 +170,7 @@ func TestImage_Optimize(t *testing.T) {
 	}
 }
 
-func TestImage_Resize(t *testing.T) { //nolint:gocognit // TODO: simplify
+func TestImage_Resize(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -264,6 +264,7 @@ func TestImage_Resize(t *testing.T) { //nolint:gocognit // TODO: simplify
 				if tt.wantErr {
 					return
 				}
+
 				t.Fatalf("Open() failed: %v", err)
 			}
 			defer img.Close()
