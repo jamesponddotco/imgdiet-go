@@ -42,13 +42,13 @@ type Options struct {
 	// Bitdepth defines the number of bits per pixel of the output image. It is
 	// a number between 1 and 8.
 	//
-	// Only valid for GIF images.
+	// Only valid for GIF and PNG images.
 	Bitdepth uint
 
 	// Dither defines the amount of dithering to be applied during 8bpp (bits
 	// per pixel) quantization. It is a floating-point number between 0 and 1.
 	//
-	// Only valid for GIF images.
+	// Only valid for GIF and PNG images.
 	Dither float64
 
 	// OptimizeCoding defines whether the output image should have its coding
@@ -295,6 +295,8 @@ func (i *Image) optimizePNG(opts *Options) ([]byte, error) {
 		Compression:   int(opts.Compression),
 		Interlace:     opts.Interlaced,
 		Quality:       int(opts.Quality),
+		Dither:        opts.Dither,
+		Bitdepth:      int(opts.Bitdepth),
 	}
 
 	image, _, err := i.reference.ExportPng(options)
