@@ -2,7 +2,6 @@ package imgdiet_test
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -14,7 +13,7 @@ import (
 type errorReader struct{}
 
 func (*errorReader) Read(_ []byte) (n int, err error) {
-	return 0, fmt.Errorf("mock error")
+	return 0, errors.New("mock error")
 }
 
 func TestDefaultOptions(t *testing.T) {
@@ -71,8 +70,6 @@ func TestOpen(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -141,8 +138,6 @@ func TestImage_Optimize(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -179,8 +174,8 @@ func TestImage_Resize(t *testing.T) {
 		width          uint
 		height         uint
 		options        *imgdiet.Options
-		expectedWidth  uint
-		expectedHeight uint
+		expectedWidth  int
+		expectedHeight int
 		wantErr        bool
 	}{
 		{
@@ -248,8 +243,6 @@ func TestImage_Resize(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -283,7 +276,7 @@ func TestImage_Resize(t *testing.T) {
 						img.Width(), img.Height(), originalWidth, originalHeight)
 				}
 			} else {
-				if img.Width() != int(tt.expectedWidth) || img.Height() != int(tt.expectedHeight) {
+				if img.Width() != tt.expectedWidth || img.Height() != tt.expectedHeight {
 					t.Errorf("Image.Resize() got width = %d, height = %d, want width = %d, height = %d",
 						img.Width(), img.Height(), tt.expectedWidth, tt.expectedHeight)
 				}
@@ -318,8 +311,6 @@ func TestImage_SizeAndSaved(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
