@@ -7,7 +7,7 @@ const (
 	Name = "imgdiet"
 
 	// Version is the version of the application.
-	Version = "0.1.0"
+	Version = "0.2.0"
 
 	// Description is the description of the application.
 	Description = "A CLI tool to optimize and resize images"
