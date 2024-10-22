@@ -15,7 +15,7 @@ type Config struct {
 	LogLevel vips.LogLevel
 
 	// Cache defines the size of the libvips cache in bytes.
-	Cache uint64
+	Cache int
 
 	// MaxConcurrency defines the maximum number of concurrent operations that
 	// libvips can perform.

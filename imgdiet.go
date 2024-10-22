@@ -33,7 +33,7 @@ func Start(cfg *Config) {
 
 	vips.Startup(&vips.Config{
 		ConcurrencyLevel: cfg.MaxConcurrency,
-		MaxCacheSize:     int(cfg.Cache),
+		MaxCacheSize:     cfg.Cache,
 		ReportLeaks:      cfg.ReportLeaks,
 		CollectStats:     false,
 	})
