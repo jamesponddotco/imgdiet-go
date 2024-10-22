@@ -19,31 +19,31 @@ const (
 type Options struct {
 	// Quality defines the quality of the output image. It is a number between 0
 	// and 100.
-	Quality uint
+	Quality int
 
 	// Compression defines the compression level of the output image. It is a
 	// number between 0 and 9.
 	//
 	// Only valid for PNG images.
-	Compression uint
+	Compression int
 
 	// Effort defines the level of CPU effort to be used when optimizing the
 	// output image. It is a number between 0 and 9.
 	//
 	// Only valid for GIF images.
-	Effort uint
+	Effort int
 
 	// QuantTable defines the quantization table to be used for the output
 	// image. It is a number between 0 and 8.
 	//
 	// Only valid for JPEG images.
-	QuantTable uint
+	QuantTable int
 
 	// Bitdepth defines the number of bits per pixel of the output image. It is
 	// a number between 1 and 8.
 	//
 	// Only valid for GIF and PNG images.
-	Bitdepth uint
+	Bitdepth int
 
 	// Dither defines the amount of dithering to be applied during 8bpp (bits
 	// per pixel) quantization. It is a floating-point number between 0 and 1.
@@ -202,7 +202,7 @@ func (i *Image) Optimize(opts *Options) ([]byte, error) {
 // Resize takes a set of dimensions and resizes the image to those dimensions.
 // If opts is not nil, the resulting image is optimized according to the given
 // Options.
-func (i *Image) Resize(width, height uint, opts *Options) ([]byte, error) {
+func (i *Image) Resize(width, height int, opts *Options) ([]byte, error) {
 	if width == 0 && height == 0 {
 		return nil, fmt.Errorf("%w", ErrInvalidResizeDimensions)
 	}
@@ -214,20 +214,20 @@ func (i *Image) Resize(width, height uint, opts *Options) ([]byte, error) {
 	)
 
 	if width == 0 {
-		width = uint(math.Round(float64(height) * aspectRatio))
+		width = int(math.Round(float64(height) * aspectRatio))
 	} else if height == 0 {
-		height = uint(math.Round(float64(width) / aspectRatio))
+		height = int(math.Round(float64(width) / aspectRatio))
 	}
 
 	if int(width) > originalWidth {
-		width = uint(originalWidth)
+		width = originalWidth
 	}
 
 	if int(height) > originalHeight {
-		height = uint(originalHeight)
+		height = originalHeight
 	}
 
-	if err := i.reference.Thumbnail(int(width), int(height), vips.InterestingCentre); err != nil {
+	if err := i.reference.Thumbnail(width, height, vips.InterestingCentre); err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 
@@ -269,13 +269,13 @@ func (i *Image) Height() int {
 func (i *Image) optimizeJPEG(opts *Options) ([]byte, error) {
 	options := &vips.JpegExportParams{
 		StripMetadata:      opts.StripMetadata,
-		Quality:            int(opts.Quality),
+		Quality:            opts.Quality,
 		Interlace:          opts.Interlaced,
 		OptimizeCoding:     opts.OptimizeCoding,
 		TrellisQuant:       opts.TrellisQuant,
 		OvershootDeringing: opts.OvershootDeringing,
 		OptimizeScans:      opts.OptimizeScans,
-		QuantTable:         int(opts.QuantTable),
+		QuantTable:         opts.QuantTable,
 	}
 
 	image, _, err := i.reference.ExportJpeg(options)
@@ -292,11 +292,11 @@ func (i *Image) optimizeJPEG(opts *Options) ([]byte, error) {
 func (i *Image) optimizePNG(opts *Options) ([]byte, error) {
 	options := &vips.PngExportParams{
 		StripMetadata: opts.StripMetadata,
-		Compression:   int(opts.Compression),
+		Compression:   opts.Compression,
 		Interlace:     opts.Interlaced,
-		Quality:       int(opts.Quality),
+		Quality:       opts.Quality,
 		Dither:        opts.Dither,
-		Bitdepth:      int(opts.Bitdepth),
+		Bitdepth:      opts.Bitdepth,
 	}
 
 	image, _, err := i.reference.ExportPng(options)
@@ -313,10 +313,10 @@ func (i *Image) optimizePNG(opts *Options) ([]byte, error) {
 func (i *Image) optimizeGIF(opts *Options) ([]byte, error) {
 	options := &vips.GifExportParams{
 		StripMetadata: opts.StripMetadata,
-		Quality:       int(opts.Quality),
+		Quality:       opts.Quality,
 		Dither:        opts.Dither,
-		Effort:        int(opts.Effort),
-		Bitdepth:      int(opts.Bitdepth),
+		Effort:        opts.Effort,
+		Bitdepth:      opts.Bitdepth,
 	}
 
 	image, _, err := i.reference.ExportGIF(options)

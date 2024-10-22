@@ -34,8 +34,8 @@ func OptimizeAction(c *cli.Context) error {
 		output = c.Args().Get(1)
 		dir    = filepath.Dir(output)
 		opts   = &imgdiet.Options{
-			Quality:            c.Uint("quality"),
-			Compression:        c.Uint("compression"),
+			Quality:            c.Int("quality"),
+			Compression:        c.Int("compression"),
 			QuantTable:         3,
 			OptimizeCoding:     true,
 			Interlaced:         c.Bool("interlace"),

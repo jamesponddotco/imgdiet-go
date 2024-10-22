@@ -171,8 +171,8 @@ func TestImage_Resize(t *testing.T) {
 	tests := []struct {
 		name           string
 		file           string
-		width          uint
-		height         uint
+		width          int
+		height         int
 		options        *imgdiet.Options
 		expectedWidth  int
 		expectedHeight int

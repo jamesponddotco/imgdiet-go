@@ -18,13 +18,13 @@ func Run() int {
 	app.HideHelpCommand = true
 
 	app.Flags = []cli.Flag{
-		&cli.UintFlag{
+		&cli.IntFlag{
 			Name:    "quality",
 			Aliases: []string{"q"},
 			Usage:   "set the quality of the output image",
 			Value:   60,
 		},
-		&cli.UintFlag{
+		&cli.IntFlag{
 			Name:    "compression",
 			Aliases: []string{"c"},
 			Usage:   "set the compression level of the output image",
