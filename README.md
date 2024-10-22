@@ -17,16 +17,17 @@ size without significant loss of quality.
 
 ## Prerequisites
 
-You'll need to have `libvips` installed on your system to use `imgdiet`.
-If you wish to use the command-line tool as well, you'll also need
-`make` and [`scdoc`](https://git.sr.ht/~sircmpwn/scdoc) installed.
+You'll need to have `Go v1.23` and `libvips` installed on your system to
+use `imgdiet`. If you wish to use the command-line tool as well, you'll
+also need `make` and [`scdoc`](https://git.sr.ht/~sircmpwn/scdoc)
+installed.
 
 ## Installation
 
 To install `imgdiet`, run:
 
 ```sh
-go get git.sr.ht/~jamesponddotco/imgdiet-go
+go get git.sr.ht/~jamesponddotco/imgdiet-go@latest
 ```
 
 You can also install the command-line application by running:
