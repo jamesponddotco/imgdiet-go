@@ -1,6 +1,6 @@
 module git.sr.ht/~jamesponddotco/imgdiet-go
 
-go 1.20
+go 1.23
 
 require (
 	git.sr.ht/~jamesponddotco/xstd-go v0.0.0-20230602124145-693a263541a3
