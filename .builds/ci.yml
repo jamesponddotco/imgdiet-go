@@ -5,6 +5,8 @@ packages:
   - 'make'
   - 'scdoc'
   - 'libvips'
+  - 'lcms2'
+  - 'openjpeg2'
 sources:
   - https://git.sr.ht/~jamesponddotco/imgdiet-go
 tasks:
