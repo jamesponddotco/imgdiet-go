@@ -1,0 +1,21 @@
+---
+image: 'archlinux'
+packages:
+  - 'go'
+  - 'make'
+  - 'scdoc'
+  - 'libvips'
+sources:
+  - https://git.sr.ht/~jamesponddotco/imgdiet-go
+tasks:
+  - lint: |
+      cd imgdiet-go
+      export PATH="${HOME}/go/bin:${PATH}"
+      make lint
+  - test: |
+      cd imgdiet-go
+      make vulnerabilities
+      make test
+  - build: |
+      cd imgdiet-go
+      make
