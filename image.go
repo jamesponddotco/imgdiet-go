@@ -219,11 +219,11 @@ func (i *Image) Resize(width, height int, opts *Options) ([]byte, error) {
 		height = int(math.Round(float64(width) / aspectRatio))
 	}
 
-	if int(width) > originalWidth {
+	if width > originalWidth {
 		width = originalWidth
 	}
 
-	if int(height) > originalHeight {
+	if height > originalHeight {
 		height = originalHeight
 	}
 
