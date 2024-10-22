@@ -3,7 +3,7 @@ module git.sr.ht/~jamesponddotco/imgdiet-go
 go 1.23
 
 require (
-	git.sr.ht/~jamesponddotco/xstd-go v0.0.0-20230602124145-693a263541a3
+	git.sr.ht/~jamesponddotco/xstd-go v0.9.0
 	github.com/davidbyttow/govips/v2 v2.15.0
 	github.com/urfave/cli/v2 v2.27.5
 )
