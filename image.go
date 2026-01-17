@@ -6,7 +6,7 @@ import (
 	"math"
 
 	"git.sr.ht/~jamesponddotco/xstd-go/xerrors"
-	"github.com/davidbyttow/govips/v2/vips"
+	"github.com/cshum/vipsgen/vips"
 )
 
 const (
@@ -107,8 +107,8 @@ func DefaultOptions() *Options {
 
 // Image defines an image to be optimized and manages its lifecycle.
 type Image struct {
-	// reference is a govips.ImageRef that contains the image data.
-	reference *vips.ImageRef
+	// reference is a vips.Image that contains the image data.
+	reference *vips.Image
 
 	// format is a string representation of the image type.
 	format string
@@ -131,21 +131,33 @@ func Open(r io.Reader) (*Image, error) {
 		return nil, fmt.Errorf("%w: %w", ErrOpenImage, err)
 	}
 
-	data, err := vips.NewImageFromBuffer(image)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrOpenImage, err)
-	}
-
 	imageType, err := DetectImageType(image)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrOpenImage, err)
 	}
 
-	return &Image{
+	var img *Image
+
+	// vipsgen may panic on invalid images, so we recover and convert to error
+	defer func() {
+		if r := recover(); r != nil {
+			img = nil
+			err = fmt.Errorf("%w: %v", ErrOpenImage, r)
+		}
+	}()
+
+	data, err := vips.NewImageFromBuffer(image, nil)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrOpenImage, err)
+	}
+
+	img = &Image{
 		reference: data,
 		format:    imageType,
 		size:      DetectImageSize(image),
-	}, nil
+	}
+
+	return img, nil
 }
 
 // Close releases the resources associated with the Image.
@@ -164,7 +176,7 @@ func (i *Image) Optimize(opts *Options) ([]byte, error) {
 	}
 
 	if opts.OptimizeICCProfile {
-		if err := i.reference.OptimizeICCProfile(); err != nil {
+		if err := i.reference.IccTransform("srgb", nil); err != nil {
 			return nil, fmt.Errorf("%w", err)
 		}
 	}
@@ -227,7 +239,10 @@ func (i *Image) Resize(width, height int, opts *Options) ([]byte, error) {
 		height = originalHeight
 	}
 
-	if err := i.reference.Thumbnail(width, height, vips.InterestingCentre); err != nil {
+	if err := i.reference.ThumbnailImage(width, &vips.ThumbnailImageOptions{
+		Height: height,
+		Crop:   vips.InterestingCentre,
+	}); err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
 
@@ -235,7 +250,8 @@ func (i *Image) Resize(width, height int, opts *Options) ([]byte, error) {
 		return i.Optimize(opts)
 	}
 
-	image, _, err := i.reference.ExportNative()
+	// Export in native format
+	image, err := i.exportNative()
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
@@ -263,13 +279,41 @@ func (i *Image) Height() int {
 	return i.reference.Height()
 }
 
+// exportNative exports the image in its native format without optimization.
+func (i *Image) exportNative() ([]byte, error) {
+	switch i.format {
+	case ImageTypeJPEG:
+		data, err := i.reference.JpegsaveBuffer(nil)
+		if err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+
+		return data, nil
+	case ImageTypePNG:
+		data, err := i.reference.PngsaveBuffer(nil)
+		if err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+
+		return data, nil
+	case ImageTypeGIF:
+		data, err := i.reference.GifsaveBuffer(nil)
+		if err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+
+		return data, nil
+	default:
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedImageFormat, i.format)
+	}
+}
+
 // optimizeJPEG takes the given Options and optimizes the image accordingly. It
 // returns the optimized image as a byte slice or an error if the optimization
 // fails.
 func (i *Image) optimizeJPEG(opts *Options) ([]byte, error) {
-	options := &vips.JpegExportParams{
-		StripMetadata:      opts.StripMetadata,
-		Quality:            opts.Quality,
+	options := &vips.JpegsaveBufferOptions{
+		Q:                  opts.Quality,
 		Interlace:          opts.Interlaced,
 		OptimizeCoding:     opts.OptimizeCoding,
 		TrellisQuant:       opts.TrellisQuant,
@@ -278,7 +322,11 @@ func (i *Image) optimizeJPEG(opts *Options) ([]byte, error) {
 		QuantTable:         opts.QuantTable,
 	}
 
-	image, _, err := i.reference.ExportJpeg(options)
+	if opts.StripMetadata {
+		options.Keep = vips.KeepNone
+	}
+
+	image, err := i.reference.JpegsaveBuffer(options)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
@@ -290,16 +338,19 @@ func (i *Image) optimizeJPEG(opts *Options) ([]byte, error) {
 // returns the optimized image as a byte slice or an error if the optimization
 // fails.
 func (i *Image) optimizePNG(opts *Options) ([]byte, error) {
-	options := &vips.PngExportParams{
-		StripMetadata: opts.StripMetadata,
-		Compression:   opts.Compression,
-		Interlace:     opts.Interlaced,
-		Quality:       opts.Quality,
-		Dither:        opts.Dither,
-		Bitdepth:      opts.Bitdepth,
+	options := &vips.PngsaveBufferOptions{
+		Compression: opts.Compression,
+		Interlace:   opts.Interlaced,
+		Q:           opts.Quality,
+		Dither:      opts.Dither,
+		Bitdepth:    opts.Bitdepth,
 	}
 
-	image, _, err := i.reference.ExportPng(options)
+	if opts.StripMetadata {
+		options.Keep = vips.KeepNone
+	}
+
+	image, err := i.reference.PngsaveBuffer(options)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
@@ -311,15 +362,17 @@ func (i *Image) optimizePNG(opts *Options) ([]byte, error) {
 // returns the optimized image as a byte slice or an error if the optimization
 // fails.
 func (i *Image) optimizeGIF(opts *Options) ([]byte, error) {
-	options := &vips.GifExportParams{
-		StripMetadata: opts.StripMetadata,
-		Quality:       opts.Quality,
-		Dither:        opts.Dither,
-		Effort:        opts.Effort,
-		Bitdepth:      opts.Bitdepth,
+	options := &vips.GifsaveBufferOptions{
+		Dither:   opts.Dither,
+		Effort:   opts.Effort,
+		Bitdepth: opts.Bitdepth,
 	}
 
-	image, _, err := i.reference.ExportGIF(options)
+	if opts.StripMetadata {
+		options.Keep = vips.KeepNone
+	}
+
+	image, err := i.reference.GifsaveBuffer(options)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}

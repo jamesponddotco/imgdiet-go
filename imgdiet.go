@@ -1,16 +1,16 @@
 // Package imgdiet offers a simple and fast image processing and compression
 // solution by leveraging C's [libvips] image processing library and its Go
-// binding, [govips].
+// binding, [vipsgen].
 //
-// [libvips]: https://github.com/libvips/libvips [govips]:
-// https://github.com/davidbyttow/govips
+// [libvips]: https://github.com/libvips/libvips
+// [vipsgen]: https://github.com/cshum/vipsgen
 package imgdiet
 
 import (
 	"net/http"
 
 	"git.sr.ht/~jamesponddotco/xstd-go/xerrors"
-	"github.com/davidbyttow/govips/v2/vips"
+	"github.com/cshum/vipsgen/vips"
 )
 
 // List of image types supported by this package.
@@ -29,13 +29,10 @@ func Start(cfg *Config) {
 		cfg = DefaultConfig()
 	}
 
-	vips.LoggingSettings(cfg.Logger, cfg.LogLevel)
-
 	vips.Startup(&vips.Config{
 		ConcurrencyLevel: cfg.MaxConcurrency,
 		MaxCacheSize:     cfg.Cache,
 		ReportLeaks:      cfg.ReportLeaks,
-		CollectStats:     false,
 	})
 }
 
