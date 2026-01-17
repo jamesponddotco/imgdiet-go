@@ -1,5 +1,6 @@
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
     - asasalint
     - asciicheck
@@ -12,15 +13,16 @@ linters:
     - decorder
     - dogsled
     - durationcheck
+    - embeddedstructfieldcheck
     - err113
     - errcheck
     - errchkjson
     - errname
     - errorlint
     - exhaustive
+    - exptostd
     - fatcontext
     - forcetypeassert
-    - gci
     - gocheckcompilerdirectives
     - gochecknoglobals
     - gochecknoinits
@@ -29,13 +31,11 @@ linters:
     - goconst
     - gocritic
     - gocyclo
+    - godoclint
     - godot
     - godox
-    - gofumpt
-    - goimports
     - goprintffuncname
     - gosec
-    - gosimple
     - gosmopolitan
     - govet
     - inamedparam
@@ -65,162 +65,120 @@ linters:
     - sloglint
     - sqlclosecheck
     - staticcheck
-    - stylecheck
-    - tenv
     - testableexamples
     - testpackage
     - thelper
     - tparallel
-    - typecheck
     - unconvert
     - unparam
     - unused
     - usestdlibvars
+    - usetesting
     - wastedassign
     - wrapcheck
-    - wsl
-
-linters-settings:
-  decorder:
-    dec-order:
-      - const
-      - var
-      - type
-      - func
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-    excluded-functions:
-      - encoding/json.Marshal
-      - encoding/json.MarshalIndent
-  errchkjson:
-    check-error-free-encoding: true
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - style
-      - performance
-      - opinionated
-  gofumpt:
-    extra-rules: true
-  gosimple:
-    checks: ["all"]
-  govet:
-    enable-all: true
-    settings:
-      shadow:
-        strict: true
-  makezero:
-    always: true
-  misspell:
-    locale: US
-  nolintlint:
-    require-explanation: true
-    require-specific: true
-  prealloc:
-    simple: false
-    for-loops: true
-  revive:
+    - wsl_v5
+  settings:
+    decorder:
+      dec-order:
+        - const
+        - var
+        - type
+        - func
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    errchkjson:
+      check-error-free-encoding: true
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - style
+        - performance
+        - opinionated
+    govet:
+      enable-all: true
+      settings:
+        shadow:
+          strict: true
+    makezero:
+      always: true
+    misspell:
+      locale: US
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    prealloc:
+      simple: false
+      for-loops: true
+    revive:
+      enable-all-rules: true
+      rules:
+        - name: enforce-map-style
+          arguments:
+            - make
+        - name: enforce-slice-style
+          arguments:
+            - make
+    sloglint:
+      no-global: default
+      args-on-sep-lines: true
+    staticcheck:
+      checks:
+        - all
+    unparam:
+      check-exported: true
+    usestdlibvars:
+      time-date-month: true
+      time-month: true
+      time-layout: true
+      crypto-hash: true
+      default-rpc-path: true
+      sql-isolation-level: true
+      tls-signature-scheme: true
+      constant-kind: true
+    usetesting:
+      os-temp-dir: true
+      context-background: true
+      context-todo: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      - name: argument-limit
-      - name: atomic
-      - name: bare-return
-      - name: blank-imports
-      - name: bool-literal-in-expr
-      - name: call-to-gc
-      - name: comment-spacings
-      - name: confusing-naming
-      - name: confusing-results
-      - name: constant-logical-expr
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: datarace
-      - name: deep-exit
-      - name: defer
-      - name: dot-imports
-      - name: duplicated-imports
-      - name: early-return
-      - name: empty-block
-      - name: empty-lines
-      - name: enforce-map-style
-        arguments:
-          - "make"
-      - name: enforce-slice-style
-        arguments:
-          - "make"
-      - name: error-naming
-      - name: error-return
-      - name: error-strings
-      - name: errorf
-      - name: exported
-      - name: flag-parameter
-      - name: function-result-limit
-      - name: get-return
-      - name: identical-branches
-      - name: if-return
-      - name: import-shadowing
-      - name: increment-decrement
-      - name: indent-error-flow
-      - name: modifies-parameter
-      - name: modifies-value-receiver
-      - name: nested-structs
-      - name: optimize-operands-order
-      - name: package-comments
-      - name: range
-      - name: range-val-address
-      - name: range-val-in-closure
-      - name: receiver-naming
-      - name: redefines-builtin-id
-      - name: redundant-import-alias
-      - name: string-of-int
-      - name: struct-tag
-      - name: superfluous-else
-      - name: time-equal
-      - name: time-naming
-      - name: unchecked-type-assertion
-      - name: unconditional-recursion
-      - name: unexported-naming
-      - name: unexported-return
-      - name: unnecessary-stmt
-      - name: unreachable-code
-      - name: unused-parameter
-      - name: unused-receiver
-      - name: use-any
-      - name: useless-break
-      - name: var-declaration
-      - name: var-naming
-      - name: waitgroup-by-value
-  sloglint:
-    no-global: "default"
-    args-on-sep-lines: true
-  staticcheck:
-    checks: ["all"]
-  stylecheck:
-    checks: ["all"]
-  usestdlibvars:
-    time-month: true
-    time-layout: true
-    crypto-hash: true
-    sql-isolation-level: true
-    tls-signature-scheme: true
-    constant-kind: true
-  unparam:
-    check-exported: true
-
+      - linters:
+          - containedctx
+          - err113
+          - gochecknoglobals
+          - gocognit
+          - maintidx
+          - nilerr
+          - nonamedreturns
+          - wrapcheck
+        path: _test\.go
+      - path: _test\.go
+        text: fieldalignment
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - containedctx
-        - err113
-        - gochecknoglobals
-        - gocognit
-        - maintidx
-        - nilerr
-        - nonamedreturns
-        - wrapcheck
-    - path: _test\.go
-      text: "fieldalignment"
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
+  settings:
+    gofumpt:
+      extra-rules: true
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
