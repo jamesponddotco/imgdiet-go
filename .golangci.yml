@@ -114,12 +114,16 @@ linters:
     revive:
       enable-all-rules: true
       rules:
+        - name: add-constant
+          disabled: true
         - name: enforce-map-style
           arguments:
             - make
         - name: enforce-slice-style
           arguments:
             - make
+        - name: line-length-limit
+          disabled: true
     sloglint:
       no-global: default
       args-on-sep-lines: true
