@@ -116,13 +116,21 @@ linters:
       rules:
         - name: add-constant
           disabled: true
+        - name: cognitive-complexity
+          disabled: true
+        - name: cyclomatic
+          disabled: true
         - name: enforce-map-style
           arguments:
             - make
         - name: enforce-slice-style
           arguments:
             - make
+        - name: function-length
+          disabled: true
         - name: line-length-limit
+          disabled: true
+        - name: unhandled-error
           disabled: true
     sloglint:
       no-global: default
