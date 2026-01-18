@@ -4,6 +4,7 @@ packages:
   - 'go'
   - 'make'
   - 'libvips'
+  - 'libheif'
   - 'lcms2'
   - 'openjpeg2'
 sources:
