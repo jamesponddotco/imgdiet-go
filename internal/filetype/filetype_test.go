@@ -14,47 +14,47 @@ func TestDetect(t *testing.T) {
 
 	tests := []struct {
 		name string
-		file string
+		give string
 		want filetype.Format
 	}{
 		{
 			name: "jpeg",
-			file: testDataPath + "/james-pond-hotel-chair.jpg",
+			give: testDataPath + "/james-pond-hotel-chair.jpg",
 			want: filetype.JPEG,
 		},
 		{
 			name: "png",
-			file: testDataPath + "/cipherhost-avatar.png",
+			give: testDataPath + "/cipherhost-avatar.png",
 			want: filetype.PNG,
 		},
 		{
 			name: "gif",
-			file: testDataPath + "/whoops.gif",
+			give: testDataPath + "/whoops.gif",
 			want: filetype.GIF,
 		},
 		{
 			name: "webp",
-			file: testDataPath + "/webp-animated.webp",
+			give: testDataPath + "/webp-animated.webp",
 			want: filetype.WebP,
 		},
 		{
 			name: "avif",
-			file: testDataPath + "/avif-8bit.avif",
+			give: testDataPath + "/avif-8bit.avif",
 			want: filetype.AVIF,
 		},
 		{
 			name: "heif",
-			file: testDataPath + "/heic-24bit.heic",
+			give: testDataPath + "/heic-24bit.heic",
 			want: filetype.HEIF,
 		},
 		{
 			name: "tiff",
-			file: testDataPath + "/tif-16bit.tif",
+			give: testDataPath + "/tif-16bit.tif",
 			want: filetype.TIFF,
 		},
 		{
 			name: "invalid",
-			file: testDataPath + "/invalid-image.jpg",
+			give: testDataPath + "/invalid-image.jpg",
 			want: filetype.Unknown,
 		},
 	}
@@ -63,7 +63,7 @@ func TestDetect(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			data, err := os.ReadFile(tt.file)
+			data, err := os.ReadFile(tt.give)
 			if err != nil {
 				t.Fatalf("failed to read file: %v", err)
 			}
@@ -81,62 +81,62 @@ func TestDetect_MagicBytes(t *testing.T) {
 
 	tests := []struct {
 		name string
-		data []byte
+		give []byte
 		want filetype.Format
 	}{
 		{
 			name: "jpeg magic bytes",
-			data: []byte{0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10},
+			give: []byte{0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10},
 			want: filetype.JPEG,
 		},
 		{
 			name: "png magic bytes",
-			data: []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A},
+			give: []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A},
 			want: filetype.PNG,
 		},
 		{
 			name: "gif87a magic bytes",
-			data: []byte{0x47, 0x49, 0x46, 0x38, 0x37, 0x61},
+			give: []byte{0x47, 0x49, 0x46, 0x38, 0x37, 0x61},
 			want: filetype.GIF,
 		},
 		{
 			name: "gif89a magic bytes",
-			data: []byte{0x47, 0x49, 0x46, 0x38, 0x39, 0x61},
+			give: []byte{0x47, 0x49, 0x46, 0x38, 0x39, 0x61},
 			want: filetype.GIF,
 		},
 		{
 			name: "webp magic bytes",
-			data: []byte{0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50},
+			give: []byte{0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50},
 			want: filetype.WebP,
 		},
 		{
 			name: "tiff little-endian magic bytes",
-			data: []byte{0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00},
+			give: []byte{0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00},
 			want: filetype.TIFF,
 		},
 		{
 			name: "tiff big-endian magic bytes",
-			data: []byte{0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08},
+			give: []byte{0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08},
 			want: filetype.TIFF,
 		},
 		{
 			name: "empty buffer",
-			data: []byte{},
+			give: make([]byte, 0),
 			want: filetype.Unknown,
 		},
 		{
 			name: "too short buffer",
-			data: []byte{0xFF, 0xD8},
+			give: []byte{0xFF, 0xD8},
 			want: filetype.Unknown,
 		},
 		{
 			name: "random bytes",
-			data: []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08},
+			give: []byte{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08},
 			want: filetype.Unknown,
 		},
 		{
 			name: "riff without webp",
-			data: []byte{0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x41, 0x56, 0x49, 0x20},
+			give: []byte{0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x41, 0x56, 0x49, 0x20},
 			want: filetype.Unknown,
 		},
 	}
@@ -145,7 +145,7 @@ func TestDetect_MagicBytes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := filetype.Detect(tt.data)
+			got := filetype.Detect(tt.give)
 			if got != tt.want {
 				t.Fatalf("expected %s, got %s", tt.want, got)
 			}
@@ -158,57 +158,57 @@ func TestDetect_ISOBMFF(t *testing.T) {
 
 	tests := []struct {
 		name string
-		data []byte
+		give []byte
 		want filetype.Format
 	}{
 		{
 			name: "avif major brand",
-			data: buildFtypBox("avif", nil),
+			give: buildFtypBox("avif", nil),
 			want: filetype.AVIF,
 		},
 		{
 			name: "avis major brand",
-			data: buildFtypBox("avis", nil),
+			give: buildFtypBox("avis", nil),
 			want: filetype.AVIF,
 		},
 		{
 			name: "heic major brand",
-			data: buildFtypBox("heic", nil),
+			give: buildFtypBox("heic", nil),
 			want: filetype.HEIF,
 		},
 		{
 			name: "heix major brand",
-			data: buildFtypBox("heix", nil),
+			give: buildFtypBox("heix", nil),
 			want: filetype.HEIF,
 		},
 		{
 			name: "mif1 with avif compatible brand",
-			data: buildFtypBox("mif1", []string{"miaf", "avif"}),
+			give: buildFtypBox("mif1", []string{"miaf", "avif"}),
 			want: filetype.AVIF,
 		},
 		{
 			name: "mif1 with heic compatible brand",
-			data: buildFtypBox("mif1", []string{"miaf", "heic"}),
+			give: buildFtypBox("mif1", []string{"miaf", "heic"}),
 			want: filetype.HEIF,
 		},
 		{
 			name: "msf1 with avif compatible brand",
-			data: buildFtypBox("msf1", []string{"msf1", "avif"}),
+			give: buildFtypBox("msf1", []string{"msf1", "avif"}),
 			want: filetype.AVIF,
 		},
 		{
 			name: "msf1 with heic compatible brand",
-			data: buildFtypBox("msf1", []string{"iso8", "heic"}),
+			give: buildFtypBox("msf1", []string{"iso8", "heic"}),
 			want: filetype.HEIF,
 		},
 		{
 			name: "mif1 without avif or heic",
-			data: buildFtypBox("mif1", []string{"miaf", "MiPr"}),
+			give: buildFtypBox("mif1", []string{"miaf", "MiPr"}),
 			want: filetype.Unknown,
 		},
 		{
 			name: "incomplete ftyp box",
-			data: []byte{0x00, 0x00, 0x00, 0x14, 'f', 't', 'y', 'p'},
+			give: []byte{0x00, 0x00, 0x00, 0x14, 'f', 't', 'y', 'p'},
 			want: filetype.Unknown,
 		},
 	}
@@ -217,7 +217,7 @@ func TestDetect_ISOBMFF(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := filetype.Detect(tt.data)
+			got := filetype.Detect(tt.give)
 			if got != tt.want {
 				t.Fatalf("expected %s, got %s", tt.want, got)
 			}
@@ -262,9 +262,10 @@ func buildFtypBox(majorBrand string, compatibleBrands []string) []byte {
 	// - 4 bytes: major brand
 	// - 4 bytes: minor version
 	// - n*4 bytes: compatible brands
-
-	boxSize := 16 + len(compatibleBrands)*4
-	buf := make([]byte, boxSize)
+	var (
+		boxSize = 16 + len(compatibleBrands)*4
+		buf     = make([]byte, boxSize)
+	)
 
 	// Box size (big-endian)
 	buf[0] = byte(boxSize >> 24)
