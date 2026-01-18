@@ -3,7 +3,6 @@ image: 'archlinux'
 packages:
   - 'go'
   - 'make'
-  - 'scdoc'
   - 'libvips'
   - 'lcms2'
   - 'openjpeg2'
@@ -18,6 +17,3 @@ tasks:
       cd imgdiet-go
       make vulnerabilities
       make test
-  - build: |
-      cd imgdiet-go
-      make
