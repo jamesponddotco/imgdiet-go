@@ -12,8 +12,8 @@ func TestDefaultConfig(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
 		want *imgdiet.Config
+		name string
 	}{
 		{
 			name: "Test Default Config",

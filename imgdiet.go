@@ -1,29 +1,60 @@
-// Package imgdiet offers a simple and fast image processing and compression
-// solution by leveraging C's [libvips] image processing library and its Go
-// binding, [vipsgen].
-//
-// [libvips]: https://github.com/libvips/libvips
-// [vipsgen]: https://github.com/cshum/vipsgen
 package imgdiet
 
 import (
-	"net/http"
-
+	"git.sr.ht/~jamesponddotco/imgdiet-go/internal/filetype"
 	"git.sr.ht/~jamesponddotco/xstd-go/xerrors"
 	"github.com/cshum/vipsgen/vips"
 )
 
-// List of image types supported by this package.
+// ErrUnsupportedFormat is returned when the image format is not supported by
+// this package.
+const ErrUnsupportedFormat xerrors.Error = "unsupported image format"
+
+// Supported image formats.
 const (
-	ImageTypeJPEG string = "JPEG"
-	ImageTypePNG  string = "PNG"
-	ImageTypeGIF  string = "GIF"
+	// FormatUnknown represents an unknown or unsupported image format.
+	FormatUnknown Format = iota
+	FormatJPEG
+	FormatPNG
+	FormatGIF
+	FormatWebP
+	FormatAVIF
+	FormatHEIF
+	FormatTIFF
 )
 
-// ErrUnsupportedImageFormat is returned when the image format is not supported by this package.
-const ErrUnsupportedImageFormat xerrors.Error = "unsupported image format"
+// Format represents an image format supported by the package.
+type Format int
+
+// String returns a human-readable string representation of the format.
+func (f Format) String() string {
+	switch f { //nolint:exhaustive // default would be FormatUnknown
+	case FormatJPEG:
+		return "JPEG"
+	case FormatPNG:
+		return "PNG"
+	case FormatGIF:
+		return "GIF"
+	case FormatWebP:
+		return "WebP"
+	case FormatAVIF:
+		return "AVIF"
+	case FormatHEIF:
+		return "HEIF"
+	case FormatTIFF:
+		return "TIFF"
+	default:
+		return "Unknown"
+	}
+}
 
 // Start initializes the libvips library with the given configuration.
+//
+// Start must be called before any image processing operations and should be
+// called exactly once during application startup. Calling Start multiple times
+// may result in undefined behavior.
+//
+// If cfg is nil, [DefaultConfig] is used.
 func Start(cfg *Config) {
 	if cfg == nil {
 		cfg = DefaultConfig()
@@ -36,29 +67,36 @@ func Start(cfg *Config) {
 	})
 }
 
-// Stop shuts down the libvips library.
+// Stop shuts down the libvips library and releases all associated resources.
+//
+// Stop should be called once when the application is finished processing
+// images, typically via defer immediately after [Start]. After Stop is called,
+// no further image processing operations should be performed.
 func Stop() {
 	vips.Shutdown()
 }
 
-// DetectImageType takes an image as a byte array input and detects its type based on
-// its magic bytes. It returns a string representation of the image type and an
-// error if the image type is not supported.
-func DetectImageType(image []byte) (string, error) {
-	switch http.DetectContentType(image) {
-	case "image/jpeg":
-		return ImageTypeJPEG, nil
-	case "image/png":
-		return ImageTypePNG, nil
-	case "image/gif":
-		return ImageTypeGIF, nil
-	default:
-		return "", ErrUnsupportedImageFormat
-	}
-}
+// DetectFormat identifies the image format by examining magic bytes. It returns
+// [FormatUnknown] and [ErrUnsupportedFormat] for unrecognized formats.
+func DetectFormat(image []byte) (Format, error) {
+	format := filetype.Detect(image)
 
-// DetectImageSize takes an image as a byte array input and detects the image
-// size in bytes.
-func DetectImageSize(image []byte) int64 {
-	return int64(cap(image))
+	switch format { //nolint:exhaustive // default would be FormatUnknown
+	case filetype.JPEG:
+		return FormatJPEG, nil
+	case filetype.PNG:
+		return FormatPNG, nil
+	case filetype.GIF:
+		return FormatGIF, nil
+	case filetype.WebP:
+		return FormatWebP, nil
+	case filetype.AVIF:
+		return FormatAVIF, nil
+	case filetype.HEIF:
+		return FormatHEIF, nil
+	case filetype.TIFF:
+		return FormatTIFF, nil
+	default:
+		return FormatUnknown, ErrUnsupportedFormat
+	}
 }

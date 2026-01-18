@@ -1,6 +1,7 @@
 package imgdiet_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"os"
@@ -25,12 +26,58 @@ func TestDefaultOptions(t *testing.T) {
 	}
 }
 
+func TestOpen_NilContext(t *testing.T) {
+	t.Parallel()
+
+	file, err := os.Open(filepath.Join(_TestDataPath, _TestValidImageJPG))
+	if err != nil {
+		t.Fatalf("unable to open file: %v", err)
+	}
+	defer file.Close()
+
+	_, err = imgdiet.Open(nil, file) //nolint:staticcheck // testing nil context behavior
+	if !errors.Is(err, imgdiet.ErrNilContext) {
+		t.Fatalf("expected ErrNilContext, got: %v", err)
+	}
+}
+
+func TestOpen_NilReader(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	_, err := imgdiet.Open(ctx, nil)
+	if !errors.Is(err, imgdiet.ErrNilReader) {
+		t.Fatalf("expected ErrNilReader, got: %v", err)
+	}
+}
+
 func TestOpen_ErrorReader(t *testing.T) {
 	t.Parallel()
 
-	_, err := imgdiet.Open(&errorReader{})
+	ctx := t.Context()
+
+	_, err := imgdiet.Open(ctx, &errorReader{})
 	if err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestOpen_CanceledContext(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	file, err := os.Open(filepath.Join(_TestDataPath, _TestValidImageJPG))
+	if err != nil {
+		t.Fatalf("unable to open file: %v", err)
+	}
+	defer file.Close()
+
+	_, err = imgdiet.Open(ctx, file)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context.Canceled, got: %v", err)
 	}
 }
 
@@ -40,32 +87,47 @@ func TestOpen(t *testing.T) {
 	tests := []struct {
 		name string
 		give string
-		err  error
+		want error
 	}{
 		{
 			name: "valid_JPEG_image",
 			give: _TestDataPath + "/" + _TestValidImageJPG,
-			err:  nil,
+			want: nil,
 		},
 		{
 			name: "valid_PNG_image",
 			give: _TestDataPath + "/" + _TestValidImagePNG,
-			err:  nil,
+			want: nil,
 		},
 		{
 			name: "valid_GIF_image",
 			give: _TestDataPath + "/" + _TestValidImageGIF,
-			err:  nil,
+			want: nil,
 		},
 		{
-			name: "invalid_image",
+			name: "valid_WebP_image",
 			give: _TestDataPath + "/" + _TestValidImageWebP,
-			err:  imgdiet.ErrUnsupportedImageFormat,
+			want: nil,
+		},
+		{
+			name: "valid_AVIF_image",
+			give: _TestDataPath + "/" + _TestValidImageAVIF,
+			want: nil,
+		},
+		{
+			name: "valid_HEIF_image",
+			give: _TestDataPath + "/" + _TestValidImageHEIF,
+			want: nil,
+		},
+		{
+			name: "valid_TIFF_image",
+			give: _TestDataPath + "/" + _TestValidImageTIFF,
+			want: nil,
 		},
 		{
 			name: "non-existent_image",
 			give: _TestDataPath + "/" + _TestNonExistentImage,
-			err:  imgdiet.ErrNilImage,
+			want: imgdiet.ErrNilReader,
 		},
 	}
 
@@ -77,6 +139,7 @@ func TestOpen(t *testing.T) {
 				file io.Reader
 				f    *os.File
 				err  error
+				ctx  = t.Context()
 			)
 
 			if tt.name != "non-existent_image" {
@@ -89,11 +152,10 @@ func TestOpen(t *testing.T) {
 				file = f
 			}
 
-			image, err := imgdiet.Open(file)
-			if !errors.Is(err, tt.err) {
-				t.Fatalf("expected error %v, got %v", tt.err, err)
+			_, err = imgdiet.Open(ctx, file)
+			if !errors.Is(err, tt.want) {
+				t.Fatalf("expected error %v, got %v", tt.want, err)
 			}
-			defer image.Close()
 
 			if err != nil {
 				return
@@ -102,245 +164,234 @@ func TestOpen(t *testing.T) {
 	}
 }
 
-func TestImage_Optimize(t *testing.T) {
+func TestImage_Format(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name    string
-		file    string
-		options *imgdiet.Options
-		wantErr bool
-	}{
-		{
-			name:    "valid_JPEG_image",
-			file:    filepath.Join(_TestDataPath, _TestValidImageJPG),
-			options: nil,
-			wantErr: false,
-		},
-		{
-			name:    "invalid_JPEG_image",
-			file:    filepath.Join(_TestDataPath, _TestInvalidImageJPG),
-			options: imgdiet.DefaultOptions(),
-			wantErr: true,
-		},
-		{
-			name:    "valid_PNG_image",
-			file:    filepath.Join(_TestDataPath, _TestValidImagePNG),
-			options: imgdiet.DefaultOptions(),
-			wantErr: false,
-		},
-		{
-			name:    "valid_GIF_image",
-			file:    filepath.Join(_TestDataPath, _TestValidImageGIF),
-			options: imgdiet.DefaultOptions(),
-			wantErr: false,
-		},
-	}
+	var (
+		ctx   = t.Context()
+		tests = []struct {
+			name string
+			give string
+			want imgdiet.Format
+		}{
+			{
+				name: "jpeg",
+				give: filepath.Join(_TestDataPath, _TestValidImageJPG),
+				want: imgdiet.FormatJPEG,
+			},
+			{
+				name: "png",
+				give: filepath.Join(_TestDataPath, _TestValidImagePNG),
+				want: imgdiet.FormatPNG,
+			},
+			{
+				name: "gif",
+				give: filepath.Join(_TestDataPath, _TestValidImageGIF),
+				want: imgdiet.FormatGIF,
+			},
+			{
+				name: "webp",
+				give: filepath.Join(_TestDataPath, _TestValidImageWebP),
+				want: imgdiet.FormatWebP,
+			},
+			{
+				name: "avif",
+				give: filepath.Join(_TestDataPath, _TestValidImageAVIF),
+				want: imgdiet.FormatAVIF,
+			},
+			{
+				name: "heif",
+				give: filepath.Join(_TestDataPath, _TestValidImageHEIF),
+				want: imgdiet.FormatHEIF,
+			},
+			{
+				name: "tiff",
+				give: filepath.Join(_TestDataPath, _TestValidImageTIFF),
+				want: imgdiet.FormatTIFF,
+			},
+		}
+	)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			file, err := os.Open(tt.file)
+			file, err := os.Open(tt.give)
 			if err != nil {
 				t.Fatalf("unable to open file: %v", err)
 			}
 			defer file.Close()
 
-			img, err := imgdiet.Open(file)
+			img, err := imgdiet.Open(ctx, file)
 			if err != nil {
-				if tt.wantErr {
-					return
-				}
-
 				t.Fatalf("Open() failed: %v", err)
 			}
-			defer img.Close()
 
-			_, err = img.Optimize(tt.options)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Image.Optimize() error = %v, wantErr %v", err, tt.wantErr)
+			if img.Format() != tt.want {
+				t.Fatalf("expected format %s, got %s", tt.want.String(), img.Format().String())
 			}
 		})
 	}
 }
 
-func TestImage_Resize(t *testing.T) {
+func TestImage_Export(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name           string
-		file           string
-		width          int
-		height         int
-		options        *imgdiet.Options
-		expectedWidth  int
-		expectedHeight int
-		wantErr        bool
-	}{
-		{
-			name:           "valid_JPEG_image",
-			file:           filepath.Join(_TestDataPath, _TestValidImageJPG),
-			width:          100,
-			height:         100,
-			options:        imgdiet.DefaultOptions(),
-			expectedWidth:  100,
-			expectedHeight: 100,
-			wantErr:        false,
-		},
-		{
-			name:           "invalid_JPEG_image",
-			file:           filepath.Join(_TestDataPath, _TestInvalidImageJPG),
-			width:          100,
-			height:         100,
-			expectedWidth:  100,
-			expectedHeight: 100,
-			wantErr:        true,
-		},
-		{
-			name:           "valid_PNG_image",
-			file:           filepath.Join(_TestDataPath, _TestValidImagePNG),
-			width:          100,
-			height:         100,
-			expectedWidth:  100,
-			expectedHeight: 100,
-			wantErr:        false,
-		},
-		{
-			name:    "invalid_dimensions",
-			file:    filepath.Join(_TestDataPath, _TestValidImageJPG),
-			width:   0,
-			height:  0,
-			wantErr: true,
-		},
-		{
-			name:           "resize_with_only_width",
-			file:           filepath.Join(_TestDataPath, _TestValidImageJPG),
-			width:          500,
-			height:         0,
-			expectedWidth:  500,
-			expectedHeight: 750,
-			wantErr:        false,
-		},
-		{
-			name:           "resize_with_only_height",
-			file:           filepath.Join(_TestDataPath, _TestValidImageJPG),
-			width:          0,
-			height:         500,
-			expectedWidth:  333,
-			expectedHeight: 500,
-			wantErr:        false,
-		},
-		{
-			name:           "resize_with_bigger_width_and_height",
-			file:           filepath.Join(_TestDataPath, _TestValidImageJPG),
-			width:          2000,
-			height:         3000,
-			expectedWidth:  1545,
-			expectedHeight: 2318,
-			wantErr:        false,
-		},
-	}
+	var (
+		ctx   = t.Context()
+		tests = []struct {
+			name        string
+			give        string
+			giveOptions *imgdiet.Options
+			giveFormat  imgdiet.Format
+			want        bool
+		}{
+			{
+				name:        "export_JPEG_as_JPEG",
+				give:        filepath.Join(_TestDataPath, _TestValidImageJPG),
+				giveFormat:  imgdiet.FormatJPEG,
+				giveOptions: nil,
+				want:        false,
+			},
+			{
+				name:        "export_JPEG_as_PNG",
+				give:        filepath.Join(_TestDataPath, _TestValidImageJPG),
+				giveFormat:  imgdiet.FormatPNG,
+				giveOptions: imgdiet.DefaultOptions(),
+				want:        false,
+			},
+			{
+				name:        "export_PNG_as_JPEG",
+				give:        filepath.Join(_TestDataPath, _TestValidImagePNG),
+				giveFormat:  imgdiet.FormatJPEG,
+				giveOptions: imgdiet.DefaultOptions(),
+				want:        false,
+			},
+			{
+				name:        "export_JPEG_as_WebP",
+				give:        filepath.Join(_TestDataPath, _TestValidImageJPG),
+				giveFormat:  imgdiet.FormatWebP,
+				giveOptions: imgdiet.DefaultOptions(),
+				want:        false,
+			},
+			{
+				name:        "export_GIF_as_GIF",
+				give:        filepath.Join(_TestDataPath, _TestValidImageGIF),
+				giveFormat:  imgdiet.FormatGIF,
+				giveOptions: imgdiet.DefaultOptions(),
+				want:        false,
+			},
+			{
+				name:        "export_AVIF_as_AVIF",
+				give:        filepath.Join(_TestDataPath, _TestValidImageAVIF),
+				giveFormat:  imgdiet.FormatAVIF,
+				giveOptions: imgdiet.DefaultOptions(),
+				want:        false,
+			},
+			{
+				name:        "export_HEIF_as_HEIF",
+				give:        filepath.Join(_TestDataPath, _TestValidImageHEIF),
+				giveFormat:  imgdiet.FormatHEIF,
+				giveOptions: imgdiet.DefaultOptions(),
+				want:        false,
+			},
+			{
+				name:        "export_TIFF_as_TIFF",
+				give:        filepath.Join(_TestDataPath, _TestValidImageTIFF),
+				giveFormat:  imgdiet.FormatTIFF,
+				giveOptions: imgdiet.DefaultOptions(),
+				want:        false,
+			},
+			{
+				name:        "export_JPEG_as_AVIF",
+				give:        filepath.Join(_TestDataPath, _TestValidImageJPG),
+				giveFormat:  imgdiet.FormatAVIF,
+				giveOptions: imgdiet.DefaultOptions(),
+				want:        false,
+			},
+			{
+				name:        "export_AVIF_as_JPEG",
+				give:        filepath.Join(_TestDataPath, _TestValidImageAVIF),
+				giveFormat:  imgdiet.FormatJPEG,
+				giveOptions: imgdiet.DefaultOptions(),
+				want:        false,
+			},
+			{
+				name:        "invalid_image",
+				give:        filepath.Join(_TestDataPath, _TestInvalidImageJPG),
+				giveFormat:  imgdiet.FormatJPEG,
+				giveOptions: imgdiet.DefaultOptions(),
+				want:        true,
+			},
+		}
+	)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			file, err := os.Open(tt.file)
+			file, err := os.Open(tt.give)
 			if err != nil {
 				t.Fatalf("unable to open file: %v", err)
 			}
 			defer file.Close()
 
-			img, err := imgdiet.Open(file)
+			img, err := imgdiet.Open(ctx, file)
 			if err != nil {
-				if tt.wantErr {
+				if tt.want {
 					return
 				}
 
 				t.Fatalf("Open() failed: %v", err)
 			}
-			defer img.Close()
 
-			originalWidth := img.Width()
-			originalHeight := img.Height()
-
-			_, err = img.Resize(tt.width, tt.height, tt.options)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Image.Resize() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
-			if err != nil {
-				if img.Width() != originalWidth || img.Height() != originalHeight {
-					t.Errorf("Image.Resize() changed dimensions on error, got width = %d, height = %d, want width = %d, height = %d",
-						img.Width(), img.Height(), originalWidth, originalHeight)
-				}
-			} else {
-				if img.Width() != tt.expectedWidth || img.Height() != tt.expectedHeight {
-					t.Errorf("Image.Resize() got width = %d, height = %d, want width = %d, height = %d",
-						img.Width(), img.Height(), tt.expectedWidth, tt.expectedHeight)
-				}
+			_, err = img.Export(tt.giveFormat, tt.giveOptions)
+			if (err != nil) != tt.want {
+				t.Errorf("Image.Export() error = %v, wantErr %v", err, tt.want)
 			}
 		})
 	}
 }
 
-func TestImage_SizeAndSaved(t *testing.T) {
+func TestImage_Export_MultipleFromSameSource(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name    string
-		file    string
-		wantErr bool
-	}{
-		{
-			name:    "valid_JPEG_image",
-			file:    filepath.Join(_TestDataPath, _TestValidImageJPG),
-			wantErr: false,
-		},
-		{
-			name:    "invalid_JPEG_image",
-			file:    filepath.Join(_TestDataPath, _TestInvalidImageJPG),
-			wantErr: true,
-		},
-		{
-			name:    "valid_PNG_image",
-			file:    filepath.Join(_TestDataPath, _TestValidImagePNG),
-			wantErr: false,
-		},
+	ctx := t.Context()
+
+	file, err := os.Open(filepath.Join(_TestDataPath, _TestValidImageJPG))
+	if err != nil {
+		t.Fatalf("unable to open file: %v", err)
+	}
+	defer file.Close()
+
+	img, err := imgdiet.Open(ctx, file)
+	if err != nil {
+		t.Fatalf("Open() failed: %v", err)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+	opts1 := imgdiet.DefaultOptions()
+	opts1.Width = 200
+	opts1.Height = 200
 
-			file, err := os.Open(tt.file)
-			if err != nil {
-				t.Fatalf("unable to open file: %v", err)
-			}
-			defer file.Close()
+	jpeg, err := img.Export(imgdiet.FormatJPEG, opts1)
+	if err != nil {
+		t.Fatalf("Export JPEG failed: %v", err)
+	}
 
-			img, err := imgdiet.Open(file)
-			if err != nil {
-				if tt.wantErr {
-					return
-				}
+	webp, err := img.Export(imgdiet.FormatWebP, imgdiet.DefaultOptions())
+	if err != nil {
+		t.Fatalf("Export WebP failed: %v", err)
+	}
 
-				t.Fatalf("Open() failed: %v", err)
-			}
-			defer img.Close()
+	opts2 := imgdiet.DefaultOptions()
+	opts2.Width = 100
 
-			_, err = img.Optimize(nil)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Image.Optimize() error = %v, wantErr %v", err, tt.wantErr)
+	png, err := img.Export(imgdiet.FormatPNG, opts2)
+	if err != nil {
+		t.Fatalf("Export PNG failed: %v", err)
+	}
 
-				return
-			}
-
-			if img.Size() <= img.Saved() {
-				t.Errorf("Image.Size() is less than or equal to Image.Saved(), got size = %d, saved = %d",
-					img.Size(), img.Saved())
-			}
-		})
+	if len(jpeg) == 0 || len(webp) == 0 || len(png) == 0 {
+		t.Error("one or more exports produced empty output")
 	}
 }
