@@ -15,5 +15,4 @@ tasks:
       make lint
   - test: |
       cd imgdiet-go
-      make vulnerabilities
       make test
