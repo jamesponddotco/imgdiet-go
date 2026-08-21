@@ -1,13 +1,18 @@
 package filetype_test
 
 import (
+	"encoding/binary"
 	"os"
 	"testing"
 
 	"git.sr.ht/~jamesponddotco/imgdiet-go/internal/filetype"
 )
 
-const testDataPath = "../../testdata"
+const (
+	brandAVIF    = "avif"
+	brandMIAF    = "miaf"
+	testDataPath = "../../testdata"
+)
 
 func TestDetect(t *testing.T) {
 	t.Parallel()
@@ -163,7 +168,7 @@ func TestDetect_ISOBMFF(t *testing.T) {
 	}{
 		{
 			name: "avif major brand",
-			give: buildFtypBox("avif", nil),
+			give: buildFtypBox(brandAVIF, nil),
 			want: filetype.AVIF,
 		},
 		{
@@ -183,17 +188,17 @@ func TestDetect_ISOBMFF(t *testing.T) {
 		},
 		{
 			name: "mif1 with avif compatible brand",
-			give: buildFtypBox("mif1", []string{"miaf", "avif"}),
+			give: buildFtypBox("mif1", []string{brandMIAF, brandAVIF}),
 			want: filetype.AVIF,
 		},
 		{
 			name: "mif1 with heic compatible brand",
-			give: buildFtypBox("mif1", []string{"miaf", "heic"}),
+			give: buildFtypBox("mif1", []string{brandMIAF, "heic"}),
 			want: filetype.HEIF,
 		},
 		{
 			name: "msf1 with avif compatible brand",
-			give: buildFtypBox("msf1", []string{"msf1", "avif"}),
+			give: buildFtypBox("msf1", []string{"msf1", brandAVIF}),
 			want: filetype.AVIF,
 		},
 		{
@@ -203,7 +208,7 @@ func TestDetect_ISOBMFF(t *testing.T) {
 		},
 		{
 			name: "mif1 without avif or heic",
-			give: buildFtypBox("mif1", []string{"miaf", "MiPr"}),
+			give: buildFtypBox("mif1", []string{brandMIAF, "MiPr"}),
 			want: filetype.Unknown,
 		},
 		{
@@ -263,15 +268,16 @@ func buildFtypBox(majorBrand string, compatibleBrands []string) []byte {
 	// - 4 bytes: minor version
 	// - n*4 bytes: compatible brands
 	var (
-		boxSize = 16 + len(compatibleBrands)*4
-		buf     = make([]byte, boxSize)
+		boxSize uint32 = 16
+		buf            = make([]byte, 16+len(compatibleBrands)*4)
 	)
 
+	for range compatibleBrands {
+		boxSize += 4
+	}
+
 	// Box size (big-endian)
-	buf[0] = byte(boxSize >> 24)
-	buf[1] = byte(boxSize >> 16)
-	buf[2] = byte(boxSize >> 8)
-	buf[3] = byte(boxSize)
+	binary.BigEndian.PutUint32(buf, boxSize)
 
 	// "ftyp"
 	copy(buf[4:8], "ftyp")
